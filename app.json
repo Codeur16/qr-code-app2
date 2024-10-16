@@ -1,36 +1,47 @@
 {
   "expo": {
-    "name": "qr-code-app2",
-    "slug": "qr-code-app2",
-    "version": "1.0.0",
+    "name": "QR Scanner",
+  "slug":  "qr-code-app2",
+
+    "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "platforms": ["ios", "android"],
+    "icon": "./assets/images/icon-large.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./assets/images/icon-vide.png", 
+      "resizeMode": "contain", 
+      "backgroundColor": "#333333"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tokoss.qrcodeapp2"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "foregroundImage": "./assets/images/icon-large.png",
+        "backgroundColor": "#333333",
+        "enableHermes": true
+      },
+      "package": "com.tokoss.qrcodeapp2"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo-black.png"
     },
     "plugins": [
       "expo-router"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c8afdfbb-f375-4162-8a02-420981e1185c"
+      }
+    },
+    "owner": "tokoss"
   }
 }
