@@ -1,48 +1,3 @@
-// import {
-//   DarkTheme,
-//   DefaultTheme,
-//   ThemeProvider,
-// } from "@react-navigation/native";
-// import { useFonts } from "expo-font";
-// import { Stack } from "expo-router";
-// import * as SplashScreen from "expo-splash-screen";
-// import { useEffect } from "react";
-// import "react-native-reanimated";
-// import { PaperProvider } from "react-native-paper";
-// import { useColorScheme } from "@/hooks/useColorScheme";
-
-// // Prevent the splash screen from auto-hiding before asset loading is complete.
-// SplashScreen.preventAutoHideAsync();
-
-// export default function RootLayout() {
-//   const colorScheme = useColorScheme();
-//   const [loaded] = useFonts({
-//     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-//   });
-
-//   useEffect(() => {
-//     if (loaded) {
-//       SplashScreen.hideAsync();
-//     }
-//   }, [loaded]);
-
-//   if (!loaded) {
-//     return null;
-//   }
-
-//   return (
-//     <PaperProvider>
-//       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-//         <Stack>
-//           <Stack.Screen name="index" options={{ headerShown: false }} />
-//           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-//           <Stack.Screen name="+not-found" />
-//         </Stack>
-//       </ThemeProvider>
-//     </PaperProvider>
-//   );
-// }
-
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -51,7 +6,6 @@ import {
   ActivityIndicator,
   Animated,
   SafeAreaView,
-  Button,
   TouchableOpacity,
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
@@ -68,11 +22,15 @@ import { SplashScreen2 } from "@/components/splashScreen";
 import { StatusBar } from "expo-status-bar";
 import { Colors } from "@/constants/Colors";
 import { useLinkTo } from "@react-navigation/native";
-import { Icon, MD3Colors } from "react-native-paper";
+import { Icon } from "react-native-paper";
+import { initDB } from "@/components/stockage";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Importer AsyncStorage
+
 // Empêcher l'écran de démarrage de se masquer automatiquement
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [isFirstLaunch, setIsFirstLaunch] = useState<boolean>(false); // État pour vérifier le premier lancement
   const linkTo = useLinkTo();
   const colorScheme = useColorScheme();
   const [isAppReady, setAppReady] = useState(false);
@@ -80,6 +38,23 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+
+  useEffect(() => {
+    const checkFirstLaunch = async () => {
+      const hasLaunched = await AsyncStorage.getItem("hasLaunched");
+      if (hasLaunched === null) {
+        // L'application n'a jamais été lancée
+        await AsyncStorage.setItem("hasLaunched", "true");
+        setIsFirstLaunch(true);
+      } else {
+        // L'application a déjà été lancée
+        setIsFirstLaunch(false);
+      }
+    };
+
+    checkFirstLaunch();
+    initDB(); // Initialiser la base de données
+  }, []);
 
   useEffect(() => {
     const prepareApp = async () => {
@@ -109,8 +84,8 @@ export default function RootLayout() {
     }
   }, [isAppReady, fadeAnim]);
 
-  // Si l'application n'est pas encore prête, afficher le splash screen personnalisé
-  if (!isAppReady) {
+  // Si l'application n'est pas encore prête ou si c'est le premier lancement, afficher le splash screen personnalisé
+  if (!isAppReady || isFirstLaunch === null) {
     return <SplashScreen2 />;
   }
 
@@ -151,7 +126,7 @@ export default function RootLayout() {
                 ), // Bouton personnalisé à gauche
               }}
             />
-             <Stack.Screen name="result"  options={{
+            <Stack.Screen name="result" options={{
                 headerShown: true, // Show the header
                 title: "Résultat", // Custom title for the header
                 headerStyle: {

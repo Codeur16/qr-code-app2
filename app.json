@@ -1,8 +1,7 @@
 {
   "expo": {
     "name": "QR Scanner",
-  "slug":  "qr-code-app2",
-
+    "slug": "qr-code-app2",
     "version": "1.0.1",
     "orientation": "portrait",
     "platforms": ["ios", "android"],
@@ -10,8 +9,8 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/icon-vide.png", 
-      "resizeMode": "contain", 
+      "image": "./assets/images/icon-vide.png",
+      "resizeMode": "contain",
       "backgroundColor": "#333333"
     },
     "ios": {
@@ -21,8 +20,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon-large.png",
-        "backgroundColor": "#333333",
-        "enableHermes": true
+        "backgroundColor": "#333333"
       },
       "package": "com.tokoss.qrcodeapp2"
     },

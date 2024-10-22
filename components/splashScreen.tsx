@@ -108,7 +108,7 @@ const SplashScreen2: React.FC<SplashScreenProps> = ({ message }) => {
         <Text style={styles.description}>
         Powered by
         </Text>
-        <Text style={styles.description}>
+        <Text style={styles.description2}>
    GOCAS
         </Text>
         </View>
@@ -146,14 +146,14 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   description: {
-    fontSize: 12,
+    fontSize: 9,
     color: Colors.dark.text,
     textAlign: "center",
     paddingHorizontal: 40,
     marginBottom: 10,
   },
   description2: {
-    fontSize: 18,
+    fontSize: 25,
     color: Colors.dark.text,
     textAlign: "center",
     paddingHorizontal: 40,

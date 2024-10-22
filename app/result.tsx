@@ -1,85 +1,179 @@
-import React, { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ToastAndroid,
+  Image,
+  Linking,
+  Share,
+  Clipboard, // Import the Clipboard module
+} from "react-native";
+import { RouteProp, useNavigation } from "@react-navigation/native";
+import * as SQLite from "expo-sqlite";
+import { IconButton } from "react-native-paper"; // Importation de IconButton
+import { saveDataToDB } from "@/components/stockage";
 import { useLocalSearchParams } from "expo-router";
+import { Colors } from "@/constants/Colors";
 
-export default function ResultScreen() {
-  const { qrData, imageUri } = useLocalSearchParams(); // Récupérer les données scannées à partir de l'URL
-  const [parsedData, setParsedData] = useState<any>(null); // État pour stocker les données analysées
+const db = SQLite.openDatabaseSync("qr_codes.db");
+
+type RootStackParamList = {
+  QRCodeForm: { qrType: string };
+};
+
+type QRCodeFormScreenProps = {
+  route: RouteProp<RootStackParamList, "QRCodeForm"> & {
+    params: { qrData: string; imageUri: string };
+  };
+};
+
+export default function QRCodeFormScreen({ route }: QRCodeFormScreenProps) {
+  const navigation = useNavigation();
+  const { qrData, imageUri } = useLocalSearchParams(); // Récupération des paramètres
+  const [formData, setFormData] = useState<any>({});
 
   useEffect(() => {
-    // Parser les données si qrData est une chaîne de caractères
-    if (typeof qrData === "string") {
-      try {
-        const jsonData = JSON.parse(qrData); // Parser les données JSON
-        setParsedData(jsonData); // Mettre à jour l'état avec les données analysées
-      } catch (error) {
-        console.error("Erreur de parsing des données QR:", error);
-      }
-    }
-  }, [qrData]);
+    console.log("Données QR :", qrData);
+    console.log("Image URI reçue :", imageUri);
+  }, [qrData, imageUri]);
 
-  // S'assurer que imageUri est de type string
-  const imageSource = typeof imageUri === 'string' ? { uri: imageUri } : null;
+  const copyToClipboard = () => {
+    if (qrData) {
+      Clipboard.setString(qrData.toString());
+      ToastAndroid.show("Copié dans le presse-papier", ToastAndroid.SHORT);
+    }
+  };
+
+  const shareData = async () => {
+    try {
+      await Share.share({
+        message: qrData ? qrData.toString() : "",
+      });
+    } catch (error) {
+      ToastAndroid.show(
+        "Impossible de partager les informations",
+        ToastAndroid.SHORT
+      );
+    }
+  };
+
+  const searchOnWeb = () => {
+    if (qrData) {
+      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(Array.isArray(qrData) ? qrData.join("") : qrData)}`;
+      Linking.openURL(searchUrl);
+    }
+  };
+
+  const deleteData = () => {
+    navigation.goBack();
+    ToastAndroid.show("Données supprimées", ToastAndroid.SHORT);
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Résultat du scan :</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <Text style={styles.header}>Informations du QR Code</Text>
+        {qrData && (
+          <View style={styles.resultContainer}>
+            <Text style={styles.resultText}>{qrData}</Text>
+          </View>
+        )}
 
-      {/* Affichage de l'image si imageSource est valide */}
-      {imageSource && (
-        <Image 
-          source={imageSource} // Utilise l'URI de l'image
-          style={styles.image} 
-          resizeMode="contain" // Ajuste l'image à l'intérieur du conteneur
-        />
-      )}
-
-      {parsedData ? (
-        <ScrollView style={styles.dataContainer}>
-          {Object.entries(parsedData).map(([key, value]) => (
-            value ? ( // Vérifie si la valeur existe
-              <Text key={key} style={styles.data}>
-                <Text style={styles.label}>{key.charAt(0).toUpperCase() + key.slice(1)}: </Text>
-                {value.toString()}
-              </Text>
-            ) : null
-          ))}
-        </ScrollView>
-      ) : (
-        <View style={styles.container}>
-        <Text style={styles.data}>{qrData}</Text>
+        <View style={styles.buttonContainer}>
+          <IconButton
+            icon="clipboard"
+            size={30}
+            onPress={copyToClipboard}
+            style={styles.iconButton}
+            iconColor="#fff"
+          />
+          <IconButton
+            icon="share"
+            size={30}
+            onPress={shareData}
+            style={styles.iconButton}
+            iconColor="#fff"
+          />
+          <IconButton
+            icon="magnify"
+            size={30}
+            onPress={searchOnWeb}
+            style={styles.iconButton}
+            iconColor="#fff"
+          />
+          <IconButton
+            icon="trash-can"
+            size={30}
+            onPress={deleteData}
+            style={styles.iconButton}
+            iconColor="#fff"
+          />
+          <IconButton
+            icon="content-save"
+            size={30}
+            onPress={async () => {
+              qrData
+                ? await saveDataToDB(
+                    Array.isArray(qrData) ? qrData.join("") : qrData,
+                    "generate"
+                  )
+                : ToastAndroid.show(
+                    "Veuillez réessayer!",
+                    ToastAndroid.SHORT
+                  );
+            }}
+            style={styles.iconButton}
+            iconColor="#fff"
+          />
+        </View>
       </View>
-      )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollContainer: {
+    display: "flex",
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    minHeight: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 0,
+    backgroundColor: Colors.dark.background85,
   },
-  title: {
+  container: {
+    padding: 20,
+    backgroundColor: "#FFF",
+    borderRadius: 10,
+    width: "90%",
+    alignItems: "center",
+  },
+  header: {
     fontSize: 24,
+    fontWeight: "bold",
     marginBottom: 20,
   },
-  dataContainer: {
+  resultContainer: {
+    backgroundColor: "#f0f0f0",
+    padding: 20,
+    borderRadius: 10,
+    marginBottom: 20,
+    width: "100%",
+  },
+  resultText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  buttonContainer: {
+    flexDirection: "row", // Disposition horizontale
+    justifyContent: "space-around", // Espace égal entre les icônes
+    width: "100%",
     marginTop: 20,
-    width: '100%',
   },
-  data: {
-    fontSize: 18,
-    color: 'green',
-    marginVertical: 5, // Ajout d'espacement vertical entre les éléments
-  },
-  label: {
-    fontWeight: 'bold', // Met le texte en gras pour les étiquettes
-  },
-  image: {
-    width: '100%', // Ajuste la largeur de l'image
-    height: 200,   // Hauteur fixe pour l'image
-    marginBottom: 20, // Espacement en bas de l'image
+  iconButton: {
+    backgroundColor: Colors.light.background2, // Couleur de fond
+    color: "#fff",
   },
 });
